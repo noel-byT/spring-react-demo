@@ -3,6 +3,7 @@ package de.noellang.springreactdemo.domain;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 
 import javax.persistence.Entity;
@@ -21,7 +22,7 @@ public class Employee {
     @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonInclude
+    @JsonManagedReference
     private Long id;
 
     private String firstName;

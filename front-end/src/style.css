@@ -4,8 +4,12 @@
 	background: rgba(255,255,255,.2);  
 	margin: 16px 24px 16px 0;
 	float: left;
-  }
+}
 
 body {
 	background-color: #f0f2f5;
+}
+
+.editable-row-operations a:first-child {
+	margin-right: 8px;
 }
