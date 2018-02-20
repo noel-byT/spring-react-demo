@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Modal, Button, Form, Input, Row, Col } from "antd";
+import { Modal, Button, Form, Input, Row, Col, DatePicker } from "antd";
 import axios from "axios";
 
 const FormItem = Form.Item;
@@ -35,11 +35,16 @@ class AddEmployeeModal extends Component {
 	handleSubmit = e => {
 		e.preventDefault();
 		this.props.form.validateFields(async (err, values) => {
+			let valuesToSubmit = {
+				...values,
+				entryDate: values["entryDate"].format("YYYY-MM-DD")
+			};
+			console.log(valuesToSubmit);
 			if(!err) {
-				let apiResult = await axios.post("http://localhost:8081/employee/add", values);
+				let apiResult = await axios.post("http://localhost:8081/employee/add", valuesToSubmit);
 				if(apiResult.status === 200) {
 					this.props.onCancel();
-
+					this.props.form.resetFields();
 					// Refresh form.
 					// god damn it, we need Redux
 				}
@@ -52,6 +57,10 @@ class AddEmployeeModal extends Component {
 		return (
 			<Modal
 				visible={this.props.visible}
+				onCancel={this.props.onCancel}
+				onOk={this.handleSubmit}
+				okText="Hinzufügen"
+				cancelText="Abbrechen"
 				title="Mitarbeiter hinzufügen"
 			>
 				<Form onSubmit={this.handleSubmit}>
@@ -77,15 +86,22 @@ class AddEmployeeModal extends Component {
 								<Input placeholder="Fachinformatiker" />
 							)}
 						</FormItem>
+						<FormItem>
+							{getFieldDecorator("entryDate", {
+								rules: [{ type: "object", required: true, message: "Bitte gebe ein Eintrittsdatum an." }]
+							})(
+								<DatePicker />
+							)}
+						</FormItem>
 					</Row>
 					<FormItem>
-						<Button
+						{/* <Button
 							type="primary"
 							htmlType="submit"
 							disabled={hasErrors(getFieldsError())}
 						>
 							Hinzufügen
-						</Button>
+						</Button> */}
 					</FormItem>
 				</Form>
 			</Modal>

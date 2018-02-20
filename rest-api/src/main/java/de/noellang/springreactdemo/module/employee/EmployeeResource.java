@@ -4,6 +4,8 @@ import de.noellang.springreactdemo.domain.Employee;
 import de.noellang.springreactdemo.module.employee.request.AddEmployeeRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "/employee", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -30,15 +31,19 @@ public class EmployeeResource {
         this.modelMapper = modelMapper;
     }
 
-    @GetMapping
+    /* @GetMapping
     public ResponseEntity<?> getAllUsers() {
         List<Employee> employees = employeeService.findAll();
-        System.out.println(employees.get(0).getId());
         return ResponseEntity.ok(employees);
         /* return ResponseEntity.ok(employees.stream()
             .map(employee -> modelMapper.map(employee, EmployeeDTO.class))
             .collect(Collectors.toList())
         ); */
+    /* } */
+
+    @GetMapping
+    public Page<Employee> getAllEmployees(Pageable pageable) {
+        return employeeService.findAllByPage(pageable);
     }
 
     @CrossOrigin
@@ -61,6 +66,8 @@ public class EmployeeResource {
 
         // TODO: Fehlerbehandlung? Was, wenn es schief geht?
         // Und wie bekommen wir die ID vom gespeicherten Objekt zurück?
+
+        // TODO: save nicht als void, sondern Employee und dann Exception Throw (SpringReactSQLError)
         employeeService.save(employee);
 
         return ResponseEntity.ok("git gud");

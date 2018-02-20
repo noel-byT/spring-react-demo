@@ -14,33 +14,64 @@ const EditableCell = ({ editable, value, onChange }) => (
 	</div>
 );
 
+const sortByAlphabet = (a, b, fieldName) => {
+	let nameA = a[fieldName].toLowerCase();
+	let nameB = b[fieldName].toLowerCase();
+
+	if(nameA < nameB) {
+		return -1;
+	}
+
+	if(nameA > nameB) {
+		return 1;
+	}
+
+	return 0;
+}
+
+const getSortType = (sort) => {
+	if(sort === "descend") {
+		return "desc";
+	}
+
+	if(sort === "ascend") {
+		return "asc";
+	}
+}
+
 class App extends Component {
 
 	constructor(props) {
 		super(props);
+		/*
+			TODO: Bei einer Sort Änderung, sollten die Parameter abgespeichert werden und die
+			Sortierung serverseitig ablaufen oder soll alles im Client gemacht werden?
+		*/
 		this.columns = [
 			{
 				title: "Vorname",
 				dataIndex: "firstName",
 				key: "firstName",
 				render: (text, record) => this.renderColumns(text, record, "firstName"),
-				sorter: (a, b) => {
-					let nameA = a.firstName.toLowerCase();
-					let nameB = b.firstName.toLowerCase();
-
-					if(nameA < nameB) {
-						return -1;
-					}
-
-					if(nameA > nameB) {
-						return 1;
-					}
-
-					return 0;
-				}
+				// sorter: (a, b) => sortByAlphabet(a, b, "firstName")
+				sorter: true
 			},
-			{ title: "Nachname", dataIndex: "lastName", key: "lastName", render: (text, record) => this.renderColumns(text, record, "lastName") },
-			{ title: "Beruf", dataIndex: "jobTitle", key: "jobTitle", render: (text, record) => this.renderColumns(text, record, "jobTitle") },
+			{
+				title: "Nachname",
+				dataIndex: "lastName",
+				key: "lastName",
+				render: (text, record) => this.renderColumns(text, record, "lastName"),
+				// sorter: (a, b) => sortByAlphabet(a, b, "lastName")
+				sorter: true
+			},
+			{
+				title: "Beruf",
+				dataIndex: "jobTitle",
+				key: "jobTitle",
+				render: (text, record) => this.renderColumns(text, record, "jobTitle"),
+				// sorter: (a, b) => sortByAlphabet(a, b, "jobTitle")
+				sorter: true
+			},
 			{
 				title: "Aktionen",
 				dataIndex: "operation",
@@ -71,6 +102,11 @@ class App extends Component {
 	state = {
 		employees: [],
 		isLoading: true,
+		pagination: {
+			pageSize: 8,
+			page: 1
+		},
+
 		employeeModalVisible: false
 	}
 
@@ -79,11 +115,16 @@ class App extends Component {
 	}
 
 	async componentDidMount() {
-		let apiResult = await axios.get("http://localhost:8081/employee");
+		/*  let apiResult = await axios.get("http://localhost:8081/employee");
 		this.setState({
 			isLoading: false,
-			employees: apiResult.data
-		});
+			employees: apiResult.data,
+			pagination: {
+				...this.state.pagination,
+				total: apiResult.data.content.length
+			}
+		}); */
+		this.fetchData({ page: this.state.pagination.page, results: this.state.pagination.pageSize });
 	}
 
 	renderColumns(text, record, column) {
@@ -95,6 +136,10 @@ class App extends Component {
 			/>
 		);
 	}
+
+	/*
+		TODO: edit, cancel, save an neues Paging anpassen.
+	*/
 
 	edit(key) {
 		const newData = [...this.state.employees];
@@ -146,6 +191,41 @@ class App extends Component {
 		}
 	}
 
+	handleTableChange = (pagination, filters, sorter) => {
+		console.log("handleTableChange", pagination, filters, sorter);
+		const pager = { ...this.state.pagination };
+		pager.current = pagination.current;
+		this.setState({
+			pagination: pager
+		});
+
+		// fetch new
+		this.fetchData({
+			results: pagination.pageSize,
+			page: pagination.current,
+			// sortField: sorter.field,
+			// sortOrder: sorter.order,
+			sorter: {
+				order: getSortType(sorter.order),
+				field: sorter.field
+			}
+		});
+	}
+
+	fetchData = async (params = {}) => {
+		console.log("params: ", params);
+		let sorting = params.sorter != null && params.sorter.order != null && params.sorter.field != null ? `&sort=${params.sorter.field},${params.sorter.order}` : ``;
+		let apiResult = await axios.get(`http://localhost:8081/employee?page=${params.page - 1}&size=${params.results}${sorting}`);
+		this.setState({
+			isLoading: false,
+			employees: apiResult.data,
+			pagination: {
+				...this.state.pagination,
+				total: apiResult.data.totalElements
+			}
+		});
+	}
+
 	render() {
 		return (
 			<Layout className="layout">
@@ -165,8 +245,7 @@ class App extends Component {
 				<Content style={{ padding: '0 50px' }}>
 					<Breadcrumb style={{ margin: '16px 0' }}>
 						<Breadcrumb.Item>Home</Breadcrumb.Item>
-						<Breadcrumb.Item>List</Breadcrumb.Item>
-						<Breadcrumb.Item>App</Breadcrumb.Item>
+						<Breadcrumb.Item>Mitarbeiter</Breadcrumb.Item>
 					</Breadcrumb>
 					<div style={{ background: '#fff', padding: 24, minHeight: 280 }}>
 						<AddEmployeeModal visible={this.state.employeeModalVisible} onCancel={this.toggleEmployeeModal} />
@@ -180,9 +259,10 @@ class App extends Component {
 										footer={() => <Button type="primary" onClick={this.toggleEmployeeModal}>Mitarbeiter hinzufügen</Button>}
 										bordered
 										rowKey="id"
-										dataSource={this.state.employees}
+										dataSource={this.state.employees.content}
 										columns={this.columns}
-										pagination={{ pageSize: 5 }}
+										pagination={this.state.pagination}
+										onChange={this.handleTableChange}
 									/>
 								</Col>
 							</Row>
