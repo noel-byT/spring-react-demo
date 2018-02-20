@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Layout, Menu, Breadcrumb, Table, Input, Popconfirm, Row, Col, Icon } from "antd";
+import { Layout, Menu, Breadcrumb, Table, Input, Popconfirm, Row, Col, Icon, Button } from "antd";
+
+import AddEmployeeModal from "./AddEmployeeModal";
 
 const { Header, Content, Footer } = Layout;
 
@@ -17,7 +19,26 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 		this.columns = [
-			{ title: "Vorname", dataIndex: "firstName", key: "firstName", render: (text, record) => this.renderColumns(text, record, "firstName") },
+			{
+				title: "Vorname",
+				dataIndex: "firstName",
+				key: "firstName",
+				render: (text, record) => this.renderColumns(text, record, "firstName"),
+				sorter: (a, b) => {
+					let nameA = a.firstName.toLowerCase();
+					let nameB = b.firstName.toLowerCase();
+
+					if(nameA < nameB) {
+						return -1;
+					}
+
+					if(nameA > nameB) {
+						return 1;
+					}
+
+					return 0;
+				}
+			},
 			{ title: "Nachname", dataIndex: "lastName", key: "lastName", render: (text, record) => this.renderColumns(text, record, "lastName") },
 			{ title: "Beruf", dataIndex: "jobTitle", key: "jobTitle", render: (text, record) => this.renderColumns(text, record, "jobTitle") },
 			{
@@ -49,7 +70,12 @@ class App extends Component {
 
 	state = {
 		employees: [],
-		isLoading: true
+		isLoading: true,
+		employeeModalVisible: false
+	}
+
+	toggleEmployeeModal = () => {
+		this.setState({ employeeModalVisible: !this.state.employeeModalVisible });
 	}
 
 	async componentDidMount() {
@@ -143,13 +169,21 @@ class App extends Component {
 						<Breadcrumb.Item>App</Breadcrumb.Item>
 					</Breadcrumb>
 					<div style={{ background: '#fff', padding: 24, minHeight: 280 }}>
+						<AddEmployeeModal visible={this.state.employeeModalVisible} onCancel={this.toggleEmployeeModal} />
 						{this.state.isLoading ? (
 							<div>loading...</div>
 						) : (
 							<Row>
 								<Col lg={12} md={24}>
 									<h2>Mitarbeiter</h2>
-									<Table bordered rowKey="id" dataSource={this.state.employees} columns={this.columns} pagination={{ pageSize: 5 }} />
+									<Table
+										footer={() => <Button type="primary" onClick={this.toggleEmployeeModal}>Mitarbeiter hinzufügen</Button>}
+										bordered
+										rowKey="id"
+										dataSource={this.state.employees}
+										columns={this.columns}
+										pagination={{ pageSize: 5 }}
+									/>
 								</Col>
 							</Row>
 						)}

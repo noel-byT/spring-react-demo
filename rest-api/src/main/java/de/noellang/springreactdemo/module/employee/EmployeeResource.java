@@ -1,18 +1,22 @@
 package de.noellang.springreactdemo.module.employee;
 
-import com.fasterxml.jackson.databind.util.BeanUtil;
 import de.noellang.springreactdemo.domain.Employee;
-import de.noellang.springreactdemo.dto.EmployeeDTO;
+import de.noellang.springreactdemo.module.employee.request.AddEmployeeRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import javax.xml.ws.Response;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/employee", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -46,6 +50,19 @@ public class EmployeeResource {
        //  BeanUtils.copyProperties(updatedEmployeeData, employeeToUpdate);
 
         employeeService.save(employee);
+        return ResponseEntity.ok("git gud");
+    }
+
+    @CrossOrigin
+    @RequestMapping(method = RequestMethod.POST, value = "/add")
+    public ResponseEntity<?> addEmployee(@Valid @RequestBody AddEmployeeRequest employeeRequest) {
+        Employee employee = new Employee();
+        BeanUtils.copyProperties(employeeRequest, employee);
+
+        // TODO: Fehlerbehandlung? Was, wenn es schief geht?
+        // Und wie bekommen wir die ID vom gespeicherten Objekt zurück?
+        employeeService.save(employee);
+
         return ResponseEntity.ok("git gud");
     }
 
